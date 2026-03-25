@@ -1868,6 +1868,7 @@
         </div>
 
         <form class="contact-form reveal reveal-delay-2" id="contactForm" novalidate aria-label="Contact form">
+          <input type="hidden" name="access_key" value="ba05999c-65c2-4e6a-b5e8-80ad2925ccd4" />
           <div class="form-group">
             <label for="fname">Name</label>
             <input type="text" id="fname" name="name" placeholder="Jane Smith" autocomplete="name" required />
@@ -2098,13 +2099,34 @@
   ============================================ */
   document.getElementById('contactForm').addEventListener('submit', e => {
     e.preventDefault();
-    const btn = e.target.querySelector('.form-submit');
-    btn.textContent = 'Sent! ✓';
-    btn.style.background = '#1a1a1a';
-    btn.style.color = 'var(--accent)';
-    btn.style.border = '1px solid var(--accent)';
+    const form = e.target;
+    const btn = form.querySelector('.form-submit');
+    const originalText = btn.textContent;
+    btn.textContent = 'Sending...';
     btn.disabled = true;
-    // Wire this up to your backend / Formspree / Netlify Forms later
+
+    fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.fromEntries(new FormData(form)))
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        btn.textContent = 'Sent! ✓';
+        btn.style.background = '#1a1a1a';
+        btn.style.color = 'var(--accent)';
+        btn.style.border = '1px solid var(--accent)';
+        form.reset();
+      } else {
+        btn.textContent = 'Failed — try again';
+        btn.disabled = false;
+      }
+    })
+    .catch(() => {
+      btn.textContent = 'Failed — try again';
+      btn.disabled = false;
+    });
   });
 
   /* ============================================
